@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarVote — Premium Stellar Live Poll</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #03060b;
+            --bg-surface: rgba(14, 18, 28, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #8e2de2;
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --danger: #f43f5e;
+            --danger-bg: rgba(244, 63, 94, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --text-primary: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        .bg-elements {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at top right, rgba(142, 45, 226, 0.15), transparent 40%), radial-gradient(circle at bottom left, rgba(0, 242, 254, 0.1), transparent 50%);
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            animation: float 20s infinite ease-in-out alternate;
+        }
+
+        .orb.primary {
+            top: -150px;
+            left: -150px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.15), transparent 70%);
+        }
+
+        .orb.secondary {
+            bottom: -200px;
+            right: -100px;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(142, 45, 226, 0.12), transparent 70%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(50px, 30px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(-30px, 60px) scale(0.9);
+            }
+        }
+
+        .glass-panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            position: relative;
+            z-index: 20;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(3, 6, 11, 0.4);
+            backdrop-filter: blur(12px);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .logo span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .network-badge {
+            padding: 8px 16px;
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .app-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 48px 24px;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 32px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sidebar,
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel-header {
+            padding: 24px 28px 16px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+        }
+
+        .panel-body {
+            padding: 24px 28px;
+        }
+
+        .wallet-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wallet-btn {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05));
+            transform: translateX(-100%);
+            transition: transform 0.4s;
+        }
+
+        .wallet-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .wallet-btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .wallet-btn.active {
+            background: linear-gradient(to right, rgba(0, 242, 254, 0.1), transparent);
+            border-color: rgba(0, 242, 254, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 242, 254, 0.1);
+        }
+
+        .wallet-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+
+        .wallet-btn.active .wallet-icon {
+            border-color: rgba(0, 242, 254, 0.5);
+            background: rgba(0, 242, 254, 0.1);
+        }
+
+        .wallet-info {
+            flex: 1;
+        }
+
+        .wallet-name {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .wallet-status {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .wallet-check {
+            color: var(--primary);
+            font-size: 18px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s;
+        }
+
+        .wallet-btn.active .wallet-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .error-toast {
+            display: none;
+            background: var(--danger-bg);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .error-toast.show {
+            display: block;
+            animation: slideInDown 0.4s;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .error-icon {
+            font-size: 16px;
+        }
+
+        .error-type {
+            font-weight: 700;
+            color: var(--danger);
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .error-desc {
+            font-size: 13px;
+            color: #fecdd3;
+            padding-left: 24px;
+        }
+
+        .account-card {
+            background: linear-gradient(145deg, rgba(22, 28, 45, 0.8), rgba(14, 18, 28, 0.9));
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .account-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .account-address {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--primary);
+            background: rgba(0, 242, 254, 0.05);
+            padding: 10px 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            border: 1px solid rgba(0, 242, 254, 0.1);
+        }
+
+        .account-balance {
+            margin-top: 16px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .balance-val {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1;
+            margin-right: 6px;
+        }
+
+        .balance-unit {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .btn-disconnect {
+            width: 100%;
+            margin-top: 16px;
+            background: rgba(244, 63, 94, 0.05);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-disconnect:hover {
+            background: var(--danger);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .info-key {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .info-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #e2e8f0;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 6px;
+            width: 24px;
+            height: 24px;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .poll-card {
+            padding: 40px;
+            border-radius: 32px;
+            position: relative;
+        }
+
+        .poll-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--danger-bg);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--danger);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .poll-question {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .poll-meta {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 24px;
+        }
+
+        .connect-prompt {
+            text-align: center;
+            padding: 48px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .connect-prompt .big {
+            font-size: 48px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.3));
+        }
+
+        .connect-prompt p {
+            font-size: 16px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .vote-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .vote-option {
+            position: relative;
+            background: rgba(22, 28, 45, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .vote-option:hover {
+            border-color: rgba(0, 242, 254, 0.3);
+            transform: translateX(4px);
+        }
+
+        .vote-option.selected {
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(0, 242, 254, 0.15);
+            background: rgba(22, 28, 45, 0.9);
+        }
+
+        .vote-option.voted {
+            cursor: default;
+        }
+
+        .vote-option.voted:hover {
+            transform: none;
+        }
+
+        .vote-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), rgba(0, 242, 254, 0.02));
+            transition: width 1.2s;
+            z-index: 0;
+        }
+
+        .vote-option.selected .vote-bar {
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.25), rgba(0, 242, 254, 0.05));
+        }
+
+        .vote-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            padding: 20px 24px;
+            gap: 20px;
+        }
+
+        .vote-radio {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vote-radio::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-base);
+            transform: scale(0);
+            transition: transform 0.3s;
+        }
+
+        .vote-option.selected .vote-radio {
+            border-color: var(--primary);
+            background: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+        }
+
+        .vote-option.selected .vote-radio::after {
+            transform: scale(1);
+        }
+
+        .vote-text {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .vote-stats {
+            text-align: right;
+        }
+
+        .vote-pct {
+            font-size: 20px;
+            color: var(--primary);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .vote-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .submit-area {
+            margin-top: 32px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 20px 32px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 16px;
+            color: var(--bg-base);
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-submit::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 242, 254, 0.5);
+        }
+
+        .btn-submit:hover:not(:disabled)::after {
+            transform: translateX(100%);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            filter: grayscale(0.5);
+        }
+
+        .results-chart .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+
+        .chart-bar-wrap {
+            margin-bottom: 20px;
+        }
+
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #94a3b8;
+        }
+
+        .chart-label span:last-child {
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .chart-track {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.2s;
+            box-shadow: 0 0 10px inset rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-fill.a {
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+        }
+
+        .chart-fill.b {
+            background: linear-gradient(90deg, #8e2de2, #4a00e0);
+            box-shadow: 0 0 15px rgba(142, 45, 226, 0.5);
+        }
+
+        .chart-fill.c {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+
+        .tx-list {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 0 12px 12px;
+        }
+
+        .tx-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            transition: transform 0.2s, background 0.2s;
+            animation: slideInUp 0.4s;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tx-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateX(4px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .tx-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .tx-icon.pending {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .tx-icon.success {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tx-icon.fail {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .tx-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tx-hash {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+
+        .tx-desc {
+            font-size: 14px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .tx-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .tx-badge {
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tx-badge.pending {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .tx-badge.success {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tx-badge.fail {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .events-list {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 0 12px 12px;
+        }
+
+        .event-line {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--glass-border);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .event-line:last-child {
+            border-bottom: none;
+        }
+
+        .event-time {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .event-type {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .event-type.vote {
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+        }
+
+        .event-type.contract {
+            background: rgba(142, 45, 226, 0.1);
+            color: #c084fc;
+            border: 1px solid rgba(142, 45, 226, 0.2);
+        }
+
+        .event-type.wallet {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .event-msg {
+            color: #e2e8f0;
+            font-size: 13px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-elements">
+        <div class="orb primary"></div>
+        <div class="orb secondary"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <header>
+        <div class="logo">Star<span>Vote</span></div>
+        <div class="header-actions">
+            <div class="network-badge">Testnet</div>
+            <span id="walletIndicator"
+                style="font-size:14px;font-weight:600;color:var(--text-muted);padding:8px 16px;background:rgba(255,255,255,0.03);border-radius:100px;border:1px solid rgba(255,255,255,0.05)">Not
+                connected</span>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="glass-panel">
+                <div class="panel-header">🔌 Connect Wallet</div>
+                <div class="panel-body">
+                    <div class="wallet-list" id="walletList">
+                        <button class="wallet-btn" onclick="connectWallet('freighter','🦊')">
+                            <div class="wallet-icon" style="color:#ff6600">🦊</div>
+                            <div class="wallet-info">
+                                <div class="wallet-name">Freighter</div>
+                                <div class="wallet-status">Most popular Stellar wallet</div>
+                            </div>
+                            <div class="wallet-check">✓</div>
+                        </button>
+                        <button class="wallet-btn" onclick="connectWallet('xbull','🐂')">
+                            <div class="wallet-icon" style="color:#00d4ff">🐂</div>
+                            <div class="wallet-info">
+                                <div class="wallet-name">xBull</div>
+                                <div class="wallet-status">Advanced Stellar wallet</div>
+                            </div>
+                            <div class="wallet-check">✓</div>
+                        </button>
+                        <button class="wallet-btn" onclick="connectWallet('rabet','💎')">
+                            <div class="wallet-icon" style="color:#7c3aed">💎</div>
+                            <div class="wallet-info">
+                                <div class="wallet-name">Rabet</div>
+                                <div class="wallet-status">Browser extension wallet</div>
+                            </div>
+                            <div class="wallet-check">✓</div>
+                        </button>
+                        <button class="wallet-btn" onclick="connectWallet('lobstr','🦞')">
+                            <div class="wallet-icon" style="color:#f59e0b">🦞</div>
+                            <div class="wallet-info">
+                                <div class="wallet-name">Lobstr</div>
+                                <div class="wallet-status">Mobile-friendly wallet</div>
+                            </div>
+                            <div class="wallet-check">✓</div>
+                        </button>
+                    </div>
+
+                    <div class="error-toast" id="err_notfound">
+                        <div class="error-header"><span class="error-icon">🔍</span><span class="error-type">Wallet Not
+                                Found</span></div>
+                        <div class="error-desc">Extension not installed.</div>
+                    </div>
+                    <div class="error-toast" id="err_rejected">
+                        <div class="error-header"><span class="error-icon">🚫</span><span class="error-type">Connection
+                                Rejected</span></div>
+                        <div class="error-desc">You declined the connection request.</div>
+                    </div>
+                    <div class="error-toast" id="err_balance">
+                        <div class="error-header"><span class="error-icon">💸</span><span
+                                class="error-type">Insufficient Balance</span></div>
+                        <div class="error-desc">Need at least 1 XLM.</div>
+                    </div>
+
+                    <div class="account-card hidden" id="accountCard">
+                        <div class="account-label">Connected Account</div>
+                        <div class="account-address" id="accountAddress">—</div>
+                        <div class="account-balance">
+                            <div><span class="balance-val" id="accountBalance">—</span><span
+                                    class="balance-unit">XLM</span></div>
+                            <div style="font-size:12px;font-weight:700;color:var(--success);">
+                                <div class="live-dot" style="display:inline-block;margin-right:4px;"></div> Active
+                            </div>
+                        </div>
+                        <button class="btn-disconnect" onclick="disconnect()">Disconnect Wallet</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <div class="panel-header">📜 Contract Details</div>
+                <div class="panel-body">
+                    <div class="info-row"><span class="info-key">Contract ID</span>
+                        <div style="display:flex;align-items:center;"><span class="info-val"
+                                id="contractId">CCYUD...7K2M</span><button class="copy-btn"
+                                onclick="copyText('CCYUDN6JWI7AMYGE7GL6EPDUN6ITAAPDUGM4GKXZQ4PK63C6RK5XJ77KS')">⎘</button>
+                        </div>
+                    </div>
+                    <div class="info-row"><span class="info-key">Network</span><span class="info-val"
+                            style="color:var(--success)">Testnet</span></div>
+                    <div class="info-row"><span class="info-key">Function</span><span class="info-val"
+                            style="color:#c084fc">cast_vote()</span></div>
+                    <div class="info-row"
+                        style="margin-top:24px;border-top:1px dashed var(--glass-border);padding-top:20px;"><span
+                            class="info-key" style="font-size:14px">Total Votes</span><span id="totalVoteCount"
+                            class="info-val" style="font-size:24px;color:#fff;font-weight:800;">247</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="glass-panel poll-card">
+                <div class="poll-badge">
+                    <div class="live-dot"></div> Live On-Chain Poll
+                </div>
+                <h1 class="poll-question" id="pollQuestion">What should the Stellar community prioritize in upcoming
+                    updates?</h1>
+                <div class="poll-meta"><span>🗳️ <b id="voteDisplay" style="color:#fff">247 votes</b></span><span>⏱️
+                        <b>8 days left</b></span><span>📄 <b>Contract secured</b></span></div>
+
+                <div id="connectPrompt" class="connect-prompt">
+                    <div class="big">💎</div>
+                    <p>Connect your Stellar wallet to cast your vote autonomously on the blockchain.</p>
+                </div>
+
+                <div class="vote-options hidden" id="voteOptions">
+                    <div class="vote-option" id="opt0" onclick="selectOption(0)">
+                        <div class="vote-bar" style="width:45%"></div>
+                        <div class="vote-content">
+                            <div class="vote-radio"></div>
+                            <div class="vote-text">⚡ DeFi & DEX improvements</div>
+                            <div class="vote-stats">
+                                <div class="vote-pct" id="pct0">45%</div>
+                                <div class="vote-count" id="cnt0">111 votes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vote-option" id="opt1" onclick="selectOption(1)">
+                        <div class="vote-bar" style="width:31%"></div>
+                        <div class="vote-content">
+                            <div class="vote-radio"></div>
+                            <div class="vote-text">🌐 Cross-chain bridges ecosystem</div>
+                            <div class="vote-stats">
+                                <div class="vote-pct" id="pct1">31%</div>
+                                <div class="vote-count" id="cnt1">77 votes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vote-option" id="opt2" onclick="selectOption(2)">
+                        <div class="vote-bar" style="width:24%"></div>
+                        <div class="vote-content">
+                            <div class="vote-radio"></div>
+                            <div class="vote-text">📱 Mobile wallet UX & Accessibility</div>
+                            <div class="vote-stats">
+                                <div class="vote-pct" id="pct2">24%</div>
+                                <div class="vote-count" id="cnt2">59 votes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="submit-area hidden" id="submitArea">
+                    <button class="btn-submit" id="submitBtn" onclick="castVote()" disabled>Select an option to
+                        proceed</button>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                <div class="glass-panel results-chart" id="resultsChart" style="padding:24px;">
+                    <div class="chart-title">📊 Real-Time Analytics</div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-label"><span>DeFi & DEX</span><span id="chartPct0">45%</span></div>
+                        <div class="chart-track">
+                            <div class="chart-fill a" id="chartBar0" style="width:45%"></div>
+                        </div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-label"><span>Cross-chain</span><span id="chartPct1">31%</span></div>
+                        <div class="chart-track">
+                            <div class="chart-fill b" id="chartBar1" style="width:31%"></div>
+                        </div>
+                    </div>
+                    <div class="chart-bar-wrap" style="margin-bottom:0">
+                        <div class="chart-label"><span>Mobile UX</span><span id="chartPct2">24%</span></div>
+                        <div class="chart-track">
+                            <div class="chart-fill c" id="chartBar2" style="width:24%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="panel-header">⚡ Recent Transactions</div>
+                    <div class="tx-list" id="txList" style="padding-top:16px;">
+                        <div class="tx-item">
+                            <div class="tx-icon success">✓</div>
+                            <div class="tx-details">
+                                <div class="tx-desc">cast_vote(option: 0)</div>
+                                <div class="tx-hash">a7f3c2e1b4...9k2m</div>
+                                <div class="tx-time">2 mins ago</div>
+                            </div>
+                            <div class="tx-badge success">success</div>
+                        </div>
+                        <div class="tx-item">
+                            <div class="tx-icon success">✓</div>
+                            <div class="tx-details">
+                                <div class="tx-desc">cast_vote(option: 2)</div>
+                                <div class="tx-hash">b9e4d7a2c1...3x8n</div>
+                                <div class="tx-time">5 mins ago</div>
+                            </div>
+                            <div class="tx-badge success">success</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <div class="panel-header">📡 Live Network Events</div>
+                <div class="events-list" id="eventList" style="padding-top:16px;">
+                    <div class="event-line"><span class="event-time">12:04:31</span><span
+                            class="event-type contract">contract</span><span class="event-msg">VoteCast event: option=0,
+                            voter=GABCD...7K</span></div>
+                    <div class="event-line"><span class="event-time">12:03:18</span><span
+                            class="event-type vote">vote</span><span class="event-msg">New vote counted. Total:
+                            247</span></div>
+                    <div class="event-line"><span class="event-time">12:01:55</span><span
+                            class="event-type wallet">wallet</span><span class="event-msg">Wallet connected via
+                            Freighter</span></div>
+                    <div class="event-line"><span class="event-time">11:59:22</span><span
+                            class="event-type contract">contract</span><span class="event-msg">Contract initialized on
+                            Testnet</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+  let state = {
+    connected: false,
+    wallet: null,
+    address: null,
+    balance: 0,
+    selectedOption: null,
+    hasVoted: false,
+    votes: [111, 77, 59],
+    txCount: 2
+  };
+
+  async function connectWallet(type, icon) {
+    hideAllErrors();
+    addEvent('wallet', `Connecting to ${type}...`);
+    await sleep(800);
+
+    if (type === 'lobstr' && Math.random() > 0.5) {
+      showError('notfound'); addEvent('wallet', 'Error: Wallet extension not found'); return;
+    }
+    if (type === 'rabet' && Math.random() > 0.5) {
+      showError('rejected'); addEvent('wallet', 'Error: User rejected connection'); return;
+    }
+
+    const mockBalance = type === 'xbull' ? 0.5 : (40 + Math.floor(Math.random() * 200));
+
+    if (mockBalance < 1) {
+      showError('balance'); addEvent('wallet', 'Error: Insufficient balance for fees'); return;
+    }
+
+    const mockAddress = generateAddress();
+    state.connected = true;
+    state.wallet = type;
+    state.address = mockAddress;
+    state.balance = mockBalance;
+
+    updateWalletUI(type, mockAddress, mockBalance);
+    addEvent('wallet', `Connected: ${mockAddress.slice(0,8)}...via ${type}`);
+    showVoteUI();
+    updateTxStatus({ type: 'wallet', desc: 'Wallet connected', status: 'success' });
+  }
+
+  function updateWalletUI(type, address, balance) {
+    document.querySelectorAll('.wallet-btn').forEach(b => b.classList.remove('active'));
+    const btns = document.querySelectorAll('.wallet-btn');
+    const names = ['freighter','xbull','rabet','lobstr'];
+    btns[names.indexOf(type)]?.classList.add('active');
+
+    document.getElementById('accountCard').classList.remove('hidden');
+    document.getElementById('accountAddress').textContent = address;
+    document.getElementById('accountBalance').textContent = balance.toFixed(2);
+    document.getElementById('walletIndicator').textContent = `${type} ●`;
+    document.getElementById('walletIndicator').style.color = 'var(--green)';
+  }
+
+  function showVoteUI() {
+    document.getElementById('connectPrompt').classList.add('hidden');
+    document.getElementById('voteOptions').classList.remove('hidden');
+    document.getElementById('submitArea').classList.remove('hidden');
+  }
+
+  function selectOption(idx) {
+    if (state.hasVoted) return;
+    state.selectedOption = idx;
+
+    document.querySelectorAll('.vote-option').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.textContent = `Cast Vote → Option ${idx + 1}`;
+  }
+
+  async function castVote() {
+    if (!state.connected || state.selectedOption === null || state.hasVoted) return;
+    
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Signing transaction...';
+
+    const fakeTxHash = generateTxHash();
+    updateTxStatus({ type: 'vote', desc: `cast_vote(option: ${state.selectedOption})`, status: 'pending', hash: fakeTxHash });
+    addEvent('contract', `Submitting cast_vote(${state.selectedOption}) to Testnet...`);
+
+    await sleep(1200);
+
+    btn.innerHTML = '<span class="spinner"></span>Confirming on Stellar...';
+    await sleep(1000);
+
+    const success = Math.random() > 0.1;
+
+    if (!success) {
+      btn.disabled = false;
+      btn.textContent = 'Retry vote';
+      updateTxStatus({ type: 'vote', desc: `cast_vote(option: ${state.selectedOption})`, status: 'fail', hash: fakeTxHash });
+      addEvent('contract', 'Transaction failed: contract execution error');
+      return;
+    }
+
+    state.votes[state.selectedOption]++;
+    state.hasVoted = true;
+    updateResults();
+
+    updateTxStatus({ type: 'vote', desc: `cast_vote(option: ${state.selectedOption})`, status: 'success', hash: fakeTxHash });
+    addEvent('vote', `VoteCast: option=${state.selectedOption}, total=${state.votes.reduce((a,b)=>a+b,0)}`);
+    addEvent('contract', `VoteCast event emitted, hash: ${fakeTxHash.slice(0,16)}...`);
+
+    btn.innerHTML = '✓ Vote cast on-chain!';
+    btn.style.background = 'linear-gradient(135deg, var(--green), #059669)';
+
+    document.querySelectorAll('.vote-option').forEach(el => el.classList.add('voted'));
+  }
+
+  function updateResults() {
+    const total = state.votes.reduce((a, b) => a + b, 0);
+    state.votes.forEach((v, i) => {
+      const pct = Math.round((v / total) * 100);
+      document.getElementById(`pct${i}`).textContent = pct + '%';
+      document.getElementById(`cnt${i}`).textContent = v + ' votes';
+      document.querySelector(`#opt${i} .vote-bar`).style.width = pct + '%';
+      document.getElementById(`chartPct${i}`).textContent = pct + '%';
+      document.getElementById(`chartBar${i}`).style.width = pct + '%';
+    });
+    document.getElementById('voteDisplay').textContent = total + ' votes';
+    document.getElementById('totalVoteCount').textContent = total;
+  }
+
+  function updateTxStatus({ type, desc, status, hash }) {
+    const icons = { pending: '⏳', success: '✓', fail: '✗', wallet: '🔌' };
+    const displayHash = hash ? hash.slice(0,12) + '...' + hash.slice(-4) : '—';
+    const item = document.createElement('div');
+    item.className = 'tx-item';
+    item.innerHTML = `
+      <div class="tx-icon ${status}">${icons[status] || '·'}</div>
+      <div class="tx-details">
+        <div class="tx-desc">${desc}</div>
+        <div class="tx-hash">${displayHash}</div>
+        <div class="tx-time">just now</div>
+      </div>
+      <div class="tx-badge ${status}">${status}</div>
+    `;
+    const list = document.getElementById('txList');
+    list.insertBefore(item, list.firstChild);
+    if (list.children.length > 8) list.removeChild(list.lastChild);
+
+    if (status === 'pending') {
+      setTimeout(() => {
+        item.querySelector('.tx-icon').textContent = '✓';
+        item.querySelector('.tx-icon').className = 'tx-icon success';
+        item.querySelector('.tx-badge').textContent = 'success';
+        item.querySelector('.tx-badge').className = 'tx-badge success';
+      }, 2200);
+    }
+  }
+
+  function addEvent(type, msg) {
+    const now = new Date();
+    const time = now.toTimeString().slice(0,8);
+    const el = document.createElement('div');
+    el.className = 'event-line';
+    el.innerHTML = `
+      <span class="event-time">${time}</span>
+      <span class="event-type ${type}">${type}</span>
+      <span class="event-msg">${msg}</span>
+    `;
+    const list = document.getElementById('eventList');
+    list.insertBefore(el, list.firstChild);
+    if (list.children.length > 20) list.removeChild(list.lastChild);
+  }
+
+  function disconnect() {
+    state.connected = false;
+    state.wallet = null;
+    state.selectedOption = null;
+
+    document.querySelectorAll('.wallet-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('accountCard').classList.add('hidden');
+    document.getElementById('walletIndicator').textContent = 'Not connected';
+    document.getElementById('walletIndicator').style.color = 'var(--muted)';
+    document.getElementById('voteOptions').classList.add('hidden');
+    document.getElementById('submitArea').classList.add('hidden');
+    document.getElementById('connectPrompt').classList.remove('hidden');
+    hideAllErrors();
+    addEvent('wallet', 'Wallet disconnected');
+  }
+
+  function showError(type) {
+    hideAllErrors();
+    document.getElementById(`err_${type}`).classList.add('show');
+    setTimeout(() => document.getElementById(`err_${type}`).classList.remove('show'), 5000);
+  }
+
+  function hideAllErrors() {
+    ['notfound','rejected','balance'].forEach(t => {
+      document.getElementById(`err_${t}`).classList.remove('show');
+    });
+  }
+
+  function copyText(text) {
+    navigator.clipboard?.writeText(text);
+    addEvent('contract', 'Contract address copied to clipboard');
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function generateAddress() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    return 'G' + Array.from({length: 55}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
+
+  function generateTxHash() {
+    return Array.from({length: 64}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+  }
+
+  function simulateLiveVotes() {
+    setInterval(() => {
+      if (Math.random() > 0.7) {
+        const optIdx = Math.floor(Math.random() * 3);
+        state.votes[optIdx]++;
+        updateResults();
+        addEvent('vote', `Remote vote counted: option=${optIdx}, voter=G${Math.random().toString(36).slice(2,8).toUpperCase()}...`);
+      }
+    }, 4000);
+  }
+
+  simulateLiveVotes();
+
+</script>
+</body>
+</html>
